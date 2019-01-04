@@ -1,0 +1,182 @@
+{% extends 'base.html'%}
+
+
+{% block content %}
+
+<section class="content">
+    
+
+        <div class="box">
+            <div class="box-header">
+              <h3 class="box-title"></h3>
+                
+              <div class="box-tools">
+                <div class="input-group input-group-sm" style="width: 150px;">
+                  <input type="text" name="table_search" class="form-control pull-right" placeholder="Search">
+
+                  <div class="input-group-btn">
+                    <button type="submit" class="btn btn-default"><i class="fa fa-search"></i></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- /.box-header -->
+            <div class="box-body no-padding">
+              <table class="table table-bordered">
+                <tr>
+                  <th style="width: 10px">#</th>
+                  <th>操作用户</th>
+                  <th>操作对象</th>
+                  <th>操作类型</th>
+                  <th>操作时间</th>
+                  <th>操作结果</th>
+                  <th>描述详情</th>
+                </tr>
+                {% for record in records %}
+                <tr>
+                  <td>{{record.id}}</td>
+                  <td>{{record.created_by}}</td>
+                  <td>{{record.app}}</td>
+                  <td>{{record.action}}</td>
+                  <td>{{record.created_time}}</td>
+                  <td>{{record.get_status_display}}</td>
+                  <td>
+                    <button class="btn btn-info btn-xs" onclick="open_detail_modal(this)" >查看</button>
+                  </td>
+                </tr>
+                {% endfor %}
+              </table>
+            </div>
+            <!-- /.box-body -->
+            <div class="box-footer clearfix">
+              <ul class="pagination pagination-sm no-margin pull-right">
+                <li><a href="#">&laquo;</a></li>
+                <li><a href="#">1</a></li>
+                <li><a href="#">2</a></li>
+                <li><a href="#">3</a></li>
+                <li><a href="#">&raquo;</a></li>
+              </ul>
+            </div>
+        </div>
+        <!-- /.box -->
+        
+        <div id="detail-modal" class="modal">
+          <div class="modal-dialog">
+            <div class="modal-content">
+             
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="detail-title" ></h4>
+              </div>
+              <div class="modal-body" id="detail-content">
+               
+              </div>
+              <div class="modal-footer">
+                  <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+              </div>
+            </div>
+            <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+      </div>
+      <!-- /.modal -->
+
+</section>
+
+{% endblock %}
+
+{% block script %}
+<script>
+    
+    function open_detail_modal(o) {
+        var id = $(o).parents('tr').children().eq(0).text();
+        $("#detail-title").html("发布记录(id:" + id + ")");
+        $.ajax({    
+                type: 'post',
+                dataType:'json',
+                data: {'id': id},
+                success:function(data){
+                    var html = formatJson(JSON.stringify(data));
+                    $('#detail-content').empty();
+                    $('#detail-content').html('<pre>' +html+'</pre>');
+                }    
+            });   
+        console.log(id)
+        $("#detail-modal").modal('show');
+    }
+    
+    function formatJson(json) {
+        var i = 0,
+                len = 0,
+                tab = "    ",
+                targetJson = "",
+                indentLevel = 0,
+                inString = false,
+                currentChar = null;
+    
+    
+        for (i = 0, len = json.length; i < len; i += 1) {
+            currentChar = json.charAt(i);
+    
+            switch (currentChar) {
+                case '{':
+                case '[':
+                    if (!inString) {
+                        targetJson += currentChar + "\n" + repeat(tab, indentLevel + 1);
+                        indentLevel += 1;
+                    } else {
+                        targetJson += currentChar;
+                    }
+                    break;
+                case '}':
+                case ']':
+                    if (!inString) {
+                        indentLevel -= 1;
+                        targetJson += "\n" + repeat(tab, indentLevel) + currentChar;
+                    } else {
+                        targetJson += currentChar;
+                    }
+                    break;
+                case ',':
+                    if (!inString) {
+                        targetJson += ",\n" + repeat(tab, indentLevel);
+                    } else {
+                        targetJson += currentChar;
+                    }
+                    break;
+                case ':':
+                    if (!inString) {
+                        targetJson += ": ";
+                    } else {
+                        targetJson += currentChar;
+                    }
+                    break;
+                case ' ':
+                case "\n":
+                case "\t":
+                    if (inString) {
+                        targetJson += currentChar;
+                    }
+                    break;
+                case '"':
+                    if (i > 0 && json.charAt(i - 1) !== '\\') {
+                        inString = !inString;
+                    }
+                    targetJson += currentChar;
+                    break;
+                default:
+                    targetJson += currentChar;
+                    break;
+            }
+        }
+        return targetJson;
+    }
+ 
+    function repeat(s, count) {
+        return new Array(count + 1).join(s);
+    }
+ 
+    
+</script>
+{% endblock %}

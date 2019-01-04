@@ -1,0 +1,112 @@
+{% extends 'base.html'%}
+
+{% block head %}
+<style>
+.left-td {
+    text-align: right;
+    vertical-align: middle !important;
+    background-color: #f0f0f0;
+}
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<section class="content">
+
+    
+    <div id="release" class="box box-default">
+        <div class="box-header with-border">
+              <h4 class="box-title">确认应用({{app.publish_name}})信息</h4>
+        </div>
+        <div class="box-body" >
+
+            <table class="table table-bordered ">
+            
+                 <tr>
+                    <td class="left-td" ><label>发布模板</label></td>
+                    <td>
+                        <div class="col-sm-5">
+                            <p class="form-control-static text-danger">{{app.publish_type.name}}</p>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="left-td" ><label>应用版本</label></td>
+                    <td>
+                       <div class="col-sm-5">
+                            <select class="form-control">
+                                <option>xuyj-test.v0.0.1</option>
+                            </select>
+                        </div>
+                    </td>
+                </tr>
+                <!--<tr>
+                    <td class="left-td" ><label>目标机器</label></td>
+                    <td>
+                       <div class="col-sm-5">
+                            <select id="target" multiple class="form-control" size=6 >
+                                {% for machine in machines %}
+                                <option value="{{machine.ssh_machine.id}}" >{{machine.ssh_machine.ssh_ip}}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </td>
+                </tr> -->
+                
+                <tr>
+                    <td class="left-td" ><label>发布说明</label></td>
+                    <td>
+                        <div class="col-sm-5">
+                        <textarea class="form-control" rows=3 ></textarea>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="left-td" ><label>发布时间</label></td>
+                    <td>
+                        <div class="col-sm-5">
+                            <input type="text" class="form-control"  />
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="left-td" ><label>消息通知</label></td>
+                    <td>
+                        <div class="checkbox">
+                            <label>
+                                <input type="checkbox" value="">短信
+                            </label>
+                            <label>
+                                <input type="checkbox" value="">邮件
+                            </label>
+                            <label>
+                                <input type="checkbox" value="">无
+                            </label>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+            <div style="margin-top: 1%;">
+                <div class="pull-right">
+                    <button class="btn btn-success">确认发布</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    
+    
+</section>
+
+{% endblock %}
+
+{% block script %}
+<script>
+    $(document).ready(function(){
+        $('#wizard .finish').click(function() {
+        }
+    })
+</script>
+{% endblock %}

@@ -1,0 +1,180 @@
+{% extends 'base.html'%}
+
+{% block head %}
+<link href="/static/plugins/wizard/bwizard.css" rel="stylesheet" />
+{% endblock %}
+
+{% block content %}
+
+<section class="content">
+
+	<div class="box box-default">
+      <form id="commentForm" method="post" class="form-horizontal">
+        <div id="wizard">
+            <ul>
+                <li><a href="#tab1" data-toggle="tab"><span class="label">1</span>基础属性</a></li>
+                <li><a href="#tab2" data-toggle="tab"><span class="label">2</span>目标机器</a></li>
+                <li><a href="#tab3" data-toggle="tab"><span class="label">3</span>高级设置</a></li>
+            </ul>
+            <div class="tab-content">
+                <div class="tab-pane" id="tab1">
+                    <div class="form-horizontal" style="padding: 20px;" >
+                        <div class="form-group">
+                            <span class="col-sm-2 control-label" >应用名称</span>
+                            <div class="col-sm-4" >
+                                <input type="text" name="publish_name" class="form-control" placeholder="英文名称">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <span class="col-sm-2 control-label">中文名称</span>
+                            <div class="col-sm-4">
+                                <input type="text" name="publish_alias" class="form-control" >
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <span class="col-sm-2 control-label" for="ttype" >应用类型</span>
+                            <div class="col-sm-4">
+                                <select class="form-control" name="publish_type" >
+                                    <option value="">请选择应用类型</option>
+                                    {% for publish_type in publish_types %}
+                                    <option value="{{publish_type.id}}">{{publish_type.name}}</option>
+                                    {% endfor %}
+                                </select>
+                                <!--<input type="text" name="ptype" class="form-control" > -->
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <span class="col-sm-2 control-label">Git/Svn地址</span>
+                            <div class="col-sm-4">
+                                <input type="text" name="publish_scmurl" class="form-control" >
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <span class="col-sm-2 control-label">发布路径</span>
+                            <div class="col-sm-4">
+                                <input type="text" name='publish_path' class="form-control" >
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane" id="tab2">
+                    <div class="form-horizontal" style="padding: 20px;">
+                        <div class="form-group">
+                            <span class="col-sm-2 control-label">用户</span>
+                            <div class="col-sm-6" >
+                                <select id="publish_user" name="publish_user" class="form-control">
+                                    <option value="">请选择用户</option>
+                                    {% for publish_user in publish_users %}
+                                    <option value="{{publish_user.ssh_username}}">{{publish_user.ssh_username}}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <span class="col-sm-2 control-label">机器列表</span>
+                            <div class="col-sm-3" style="width: 24%">
+                                <select id="source" multiple class="form-control" size=12>
+                                </select>
+                            </div>
+                            <div class="col-sm-1" style="margin: 0 -1.8% 0 -1.2%">
+                                <div style="padding: 66px 0 10px 0;">
+                                    <input type="button" id="btn_add" value="&gt;&gt;" />
+                                </div>
+                                <input type="button" id="btn_remove" value="&lt;&lt;"/>
+                            </div>
+                            <div class="col-sm-3" style="margin-left: -3%;width: 24%">
+                                <select id="target" multiple class="form-control" size=12 >
+                                    
+                                </select>
+                            </div>
+                            <input type="hidden" id="publish_machine" name="publish_machine" />
+                        </div>
+                    </div>
+                </div>
+                <div class="tab-pane" id="tab3">
+                    <div class="form-horizontal" style="padding: 20px;">
+                        <div class="form-group">
+                            <span class="col-sm-2 control-label">pre_deploy</span>
+                            <div class="col-sm-6" >
+                                <textarea class="form-control" rows="8" placeholder="Enter ..."></textarea>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <span class="col-sm-2 control-label">post_deploy</span>
+                            <div class="col-sm-6" >
+                                <textarea class="form-control" rows="8" placeholder="Enter ..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <ul class="pager wizard">
+                    <li class="previous first" style="display:none;"><a href="#">First</a></li>
+                    <li class="previous"><a href="#">Previous</a></li>
+                    <li class="next last" style="display:none;"><a href="#">Last</a></li>
+                    <li class="next"><a href="#">Next</a></li>
+                    <li class="finish" style="float: right;"><a href="javascript:;">Finish</a></li>
+                </ul>
+            </div>
+        </div> <!--<wizard-->
+      </form>
+	</div>
+</section>
+
+{% endblock %}
+
+{% block script %}
+<script src="/static/js/jquery.validate.min.js"></script>
+<script src="/static/plugins/wizard/jquery.bootstrap.wizard.min.js" type="text/javascript"></script>
+<script type="text/javascript">
+    var $validator = $("#commentForm").validate({
+		  rules: {
+		    publish_name: { required: true },
+            publish_alias: { required: true },
+		    publish_type: { required: true },
+		    //repos: { required: true },
+            publish_path: { required: true,},
+            target: { required: true, }
+		  }
+	});
+    $('#wizard').bootstrapWizard({
+        'tabClass': 'bwizard-steps', 
+        onTabClick: function(tab, navigation, index) {
+            return false;
+        },
+        'onNext': function(tab, navigation, index) {
+            var $valid = $("#commentForm").valid();
+            if(!$valid) {
+                $validator.focusInvalid();
+                return false;
+            }
+        }
+    });
+    $("#btn_add").click(function(){
+        $("#source").find("option:selected").each(function(){
+            $(this).appendTo("#target");
+        });
+    });    
+    $("#btn_remove").click(function(){
+        $("#target").find("option:selected").each(function(){    
+            $(this).appendTo("#source");
+        });
+    });
+    $("#publish_user").change(function(){ 
+        console.log(this.value);
+        $.get("/brm/machine/", {"ssh_username": this.value }, function(data) {
+            for ( var i=0; i<data.length; i++ ) {
+                $("#source").append('<option value="' + data[i][0] + '">'+ data[i][1] + '</option>')
+            }
+        }, "json")
+        .error(function() { alert("网络异常，请稍后再试！"); })
+    })
+    $('#wizard .finish').click(function() {
+        var publish_machine = "";
+        $("#target option").each(function(){
+            publish_machine += $(this).val() + ",";
+        })
+        $("#publish_machine").val(publish_machine) ;
+        $("#commentForm").submit()
+	});
+</script>
+{% endblock %}

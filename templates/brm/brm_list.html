@@ -1,0 +1,300 @@
+{% extends 'base.html'%}
+
+{% block head %}
+<link rel="stylesheet" href="/static/plugins/timepicker/bootstrap-timepicker.min.css">
+{% endblock %}
+
+
+{% block content %}
+
+<section class="content">
+    
+
+        <div class="box">
+            <div class="box-header">
+              <h3 class="box-title"></h3>
+                
+              <div class="box-tools">
+                <div class="input-group input-group-sm pull-left" style="margin-right:5px;" >
+                    <button type="button" class="btn btn-default btn-sm" onclick="location.href='/brm/add/'" >
+                        <i class="fa fa-fw fa-plus"></i>添加应用</button>
+                    </button>
+                </div>
+                <div class="input-group input-group-sm" style="width: 150px;">
+                  <input type="text" name="table_search" class="form-control pull-right" placeholder="Search">
+
+                  <div class="input-group-btn">
+                    <button type="submit" class="btn btn-default"><i class="fa fa-search"></i></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- /.box-header -->
+            <div class="box-body no-padding">
+              <table class="table table-bordered">
+                <tr>
+                  <th style="width: 10px">#</th>
+                  <th>应用名称</th>
+                  <th>中文名称</th>
+                  <th>节点数量</th>
+                  <th>代码版本</th>
+                  <th>应用状态</th>
+                  <th>创建者</th>
+                  <th>创建时间</th>
+                  <th>操作</th>
+                </tr>
+                {% for app in apps %}
+                <tr>
+                    <td>{{app.id}}</td>
+                    <td>{{app.publish_name}}</td>
+                    <td>{{app.publish_alias}}</td>
+                    <td>{{app.publish_num}}</td>
+                    <td>{{app.current_version}}</td>
+                    <!--<td>{{app.get_publish_runstat_display}}</td> -->
+                    <td id="app_{{app.id}}_status">
+                        <span class="badge bg-light-blue">{{app.get_publish_status_display}}</span>
+                        <div class="progress progress-xs" style="display:none;">
+                            <div class="progress-bar progress-bar-danger" id="progress-bar-{{app.id}}" style="width: 0%"></div>
+                        </div>
+                    </td>
+                    <td>{{app.created_by}}</td>
+                    <td>{{app.created_time}}</td>
+                    <td>
+                        <button type="button" class="btn btn-info btn-xs" onclick="location.href='/brm/update/?id={{app.id}}'">编辑</button>
+                        <button type="button" class="btn btn-danger  btn-xs" onclick="location.href='/brm/delete/?id={{app.id}}'">删除</button>
+                        <button type="button" class="btn btn-success  btn-xs" id="open_release_modal" >发布</button>
+                        <div class="btn-group">
+                            <button type="button" class="btn btn-primary btn-xs dropdown-toggle" data-toggle="dropdown">
+                                更多
+                                <span class="caret"></span>
+                            </button>
+                            <ul class="dropdown-menu" role="menu">
+                                <li><a href="#">服务配置</a></li>
+                                <li><a href="#">启动服务</a></li>
+                                <li><a href="#">关闭服务</a></li>
+                                <li><a href="#">启停监控</a></li>
+                            </ul>
+                        </div>
+                  </td>
+                </tr>
+                {% endfor %}
+              </table>
+            </div>
+            <!-- /.box-body -->
+            <div class="box-footer clearfix">
+              <ul class="pagination pagination-sm no-margin pull-right">
+                <li><a href="#">&laquo;</a></li>
+                <li><a href="#">1</a></li>
+                <li><a href="#">2</a></li>
+                <li><a href="#">3</a></li>
+                <li><a href="#">&raquo;</a></li>
+              </ul>
+            </div>
+        </div>
+        <!-- /.box -->
+        
+
+        <div id="release-modal" class="modal">
+          <div class="modal-dialog">
+            <div class="modal-content">
+             
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">版本发布</h4>
+              </div>
+              <div class="modal-body">
+                <form id="ReleaseForm" class="form-horizontal" method="post" >
+                  <div class="form-group">
+                    <div class="col-sm-2" style="border-right: 2px solid #ddd;">
+                        <label class="control-label">定时发布</label>
+                    </div>
+                    <div class="col-sm-10">
+                         <label class="radio-inline">
+                             <input type="radio" name="time" value="1"> 是
+                         </label>
+                         <label class="radio-inline">
+                             <input type="radio" name="time" value="0"> 否
+                         </label>
+                    </div>
+                  </div>
+                  <div class="bootstrap-timepicker">
+                    <div id="settime" class="form-group" style="display: none;" >
+                        <div class="col-sm-2" style="border-right: 2px solid #ddd;">
+                            <label class="control-label">设置时间</label>
+                        </div>
+                        <div class="col-sm-10" >
+                            <div class="input-group" style="width: 50%;" >
+                                <input type="text" class="form-control timepicker" >
+                                <div class="input-group-addon">
+                                <i class="fa fa-clock-o"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <div class="col-sm-2" style="border-right: 2px solid #ddd;">
+                        <label class="control-label">消息通知</label>
+                    </div>
+                    <div class="col-sm-10">
+                        <div class="checkbox">
+                            <label><input type="checkbox" name="notice" value="1">短信</label>
+                            <label><input type="checkbox" name="notice" value="2">邮件</label>
+                        </div>
+                    </div>
+                  </div>
+                </form>
+           </div>
+           <div class="modal-footer">
+             <button type="button" class="btn btn-default pull-left" data-dismiss="modal">Close</button>
+             <button type="button" id="brm_release" class="btn btn-primary">确认发布</button>
+           </div>
+         </div>
+         <!-- /.modal-content -->
+      </div>
+      <!-- /.modal-dialog -->
+    </div>
+    <!-- /.modal -->
+
+</section>
+
+{% endblock %}
+
+{% block script %}
+<script src="/static/plugins/timepicker/bootstrap-timepicker.min.js"></script>
+<script>
+
+    $(document).ready( function() {
+    
+        var socket;
+        var value=0;
+        var uuid = getGuid( (new Date()).valueOf() );
+        connect( uuid );
+        
+         //Timepicker
+        $(".timepicker").timepicker({
+            showInputs: false
+        });
+        
+        $(":radio[name='time']").click(function(){
+            if ( 1 == parseInt( $(this).val() ) ) {
+                $("#settime").show();
+            } else {
+                $("#settime").hide();
+            }
+        });
+        
+        $("#open_release_modal").click(function(){
+            var appid = $(this).parents('tr').children().eq(0).text();
+            var appname = $(this).parents('tr').children().eq(1).text();
+            $(".modal-title").text(appname + "版本发布");
+            var form = $("#ReleaseForm");
+            var input = $("<input type='hidden'>");
+            input.attr({"name":"appid"});
+            input.val(appid);
+            form.append(input);
+            var input = $("<input type='hidden'>");
+            input.attr({"name":"uuid"});
+            input.val(uuid);
+            form.append(input);
+            $("#release-modal").modal('show');
+        });
+        
+        $("#brm_release").click(function(){
+            var appid = $("#ReleaseForm input[name='appid']").val();
+            $.ajax({    
+                type: 'post',
+                dataType:'json',
+                url: '/brm/release/',
+                data: $('#ReleaseForm').serialize(),
+                success:function(data){   
+                    if (data.code == 1) {
+                        $("#release-modal").modal("hide");
+                        $("#app_" + appid + "_status span").hide();
+                        $("#app_" + appid + "_status .progress").show();
+                    } else {
+                        alert(data.msg);
+                    }
+                }    
+            });    
+        });
+        
+        function getGuid(digit) {
+            var s = [];
+            var hexDigits = "0123456789abcdef";
+        
+            var len = digit.length;
+            if ( len > 16 ) {
+                hexDigits = digit.substring(0,15)
+            } else if ( len < 16 ) {
+                hexDigits = digit
+                for(var i=0;i<(16-len);i++){
+                    hexDigits += "0"
+                }
+            }
+            for (var i = 0; i < 36; i++) {
+                s[i] = hexDigits.substr(Math.floor(Math.random() * 0x10), 1);
+            }
+            s[14] = "4";  // bits 12-15 of the time_hi_and_version field to 0010
+            s[19] = hexDigits.substr((s[19] & 0x3) | 0x8, 1);  // bits 6-7 of the clock_seq_hi_and_reserved to 01
+            s[8] = s[13] = s[18] = s[23] = "-";
+                
+            return s.join("");
+        }
+        
+        function connect(uuid) {
+            var host = "ws://192.168.75.131:9000/channel?udid=" + uuid;
+            socket = new WebSocket(host);
+                
+            try {
+        
+                socket.onopen = function (msg) {
+                    console.log("connected！");
+                };
+        
+                socket.onmessage = function (msg) {
+                    if (typeof msg.data == "string") {
+                        //console.log(  msg.data );
+                        var current_value;
+                        d = JSON.parse(msg.data);
+                        if (d.plus == 1) {
+                            value += d.value
+                            current_value = value
+                        } else {
+                            current_value = d.value + value;
+                        }
+                        var rate = ( parseFloat(current_value)/parseFloat(d.allsize) ) * 100
+                        if( parseInt(rate) == 100 ) {
+                            //$("#app_" + d.appid + "_status span").show();
+                            //$("#app_" + d.appid + "_status .progress").hide();
+                            window.location.reload();
+                        }
+                        $("#progress-bar-" + d.appid ).css("width", rate.toFixed(2)+'%' );
+                        console.log(  rate.toFixed(2) );
+                    }
+                    else {
+                        alert("non-text message.");
+                    }
+                };
+        
+                socket.onclose = function (msg) { console.log( msg) };
+            }
+            catch (ex) {
+                log(ex);
+            }
+        }
+    
+        window.onbeforeunload = function () {
+            try {
+                socket.close();
+                socket = null;
+            }
+            catch (ex) {
+            }
+        };
+    
+    })
+        
+</script>
+{% endblock %}
