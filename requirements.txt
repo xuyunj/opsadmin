@@ -1,0 +1,2 @@
+django==1.11.16
+ansible=2.7.1
