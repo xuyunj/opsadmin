@@ -43,3 +43,7 @@ Run
 
         python manage.py runserver ip:8000
 
+
+效果图
+=====
+* https://github.com/xuyunj/opsadmin/tree/master/static/effect-picture
