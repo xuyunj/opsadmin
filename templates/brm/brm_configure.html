@@ -167,8 +167,8 @@
                 alert("请选择主机");
                 return;
             }
-            var operate_mode = $(".operate_mode").val();
-            if ( 0 == parseInt(this.value) ) {
+            var operate_mode = $('input:radio[name="operate_mode"]:checked').val();
+            if ( 0 == parseInt(operate_mode) ) {
                 var configure_file = $("#configure_files").val();
                 if(!configure_file){
                     alert("请选择配置文件");
