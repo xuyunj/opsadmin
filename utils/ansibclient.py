@@ -77,6 +77,9 @@ class AnsibleAPI(object):
     """
 
     def __init__(self, resource, passwords=None, *args, **kwargs):
+        module_path = [
+            os.path.abspath( os.path.join(os.path.dirname(os.path.abspath(__file__)), '../modules') ),
+        ]
         self.passwords = {} if not passwords else passwords
         
         # since API is constructed for CLI it expects certain options to always be set, named tuple 'fakes' the args parsing options object
@@ -84,7 +87,7 @@ class AnsibleAPI(object):
                              'become_user', 'check', 'diff', 'listhosts', 'listtasks', 'listtags','syntax' ])
         self.options = Options( 
                          connection = 'myparamiko',
-                         module_path=[], 
+                         module_path=module_path, 
                          forks=10, 
                          become=None,
                          become_method=None,
@@ -159,12 +162,20 @@ class AnsibleAPI(object):
             print "error:",e.message
         return self.callback.results
         
-    def copy_file(self, src, dest, extra=None):
+    def put_file(self, src, dest, extra=None):
         """
         Ansible copy file
         """
         module_args = "src=%s  dest=%s"%(src, dest)
-        self.run('mycopy', module_args)
+        self.run('copy', module_args)
+        return self.callback.results
+        
+    def get_file(self, src, dest, extra=None):
+        """
+        Ansible fetch file
+        """
+        module_args = "src=%s dest=%s flat=yes" % (src, dest)
+        self.run('fetch', module_args)
         return self.callback.results
         
     def exec_command(self, cmd):
@@ -180,7 +191,13 @@ class AnsibleAPI(object):
         """
         self.run('shell', path)
         return self.callback.results
-  
-    
+        
+    def exec_timely_command(self, cmd, url, name, uid ):
+        """
+        Timely output script execution information.
+        """
+        module_args = 'command="%s" url=%s name=%s uid=%s' %(cmd, url, name, uid)
+        self.run('my_command', module_args)
+        return self.callback.results
     
     

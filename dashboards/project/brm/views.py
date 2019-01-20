@@ -1,11 +1,16 @@
+import os
 import json
+import chardet
+from django.conf import settings
 from dashboards import urls
 from django.views import generic
+from django.http import QueryDict
 from utils.response import CommonResponse
 from authority.shortcuts import login_perm_required
 from dashboards.project.general.models import UniUser
 from dashboards.executor.models import Task
 from .models import App,AppNode,Template,Record
+from utils import path_utils
 
 
 
@@ -165,12 +170,131 @@ class BusinessRecord(generic.View, CommonResponse):
     
     @login_perm_required(perm_check=True)
     def get(self, request, *args, **kwargs):
+        id = request.GET.get('id')
+        records = Record.objects.filter(app_id = id )
         data = {'records': Record.objects.all() }
         return self._isupply_response(request, 'brm/brm_record.html', data )
         
-    def post(self, request, *args, **kwargs):
-        id = request.POST.get('id')
-        record = Record.objects.get(id=id)
-        return self._iresult( json.dumps(record.details) )
-        #return self._iresult( json.dumps(record.details, indent=4) )
+
+@urls.register
+class BrmConfigure(generic.View, CommonResponse):
+
+    url_regex = r'^brm/configure/$'
+    
+    @login_perm_required(perm_check=True)
+    def get(self, request, *args, **kwargs):
+        id = request.GET.get('id')
+        app = App.objects.get(id=id)
+        target_nodes = AppNode.objects.filter(app = app)
+        data = {'name': app.publish_name, 'target_nodes': target_nodes}
+        return self._isupply_response(request, 'brm/brm_configure.html', data )
         
+
+@urls.register
+class BrmConfigureFiles(generic.View, CommonResponse):
+
+    url_regex = r'^brm/configure/files/$'
+    
+    @login_perm_required(perm_check=True)
+    def get(self, request, *args, **kwargs):
+        id = request.GET.get('id')
+        host = request.GET.get('host')
+        app = App.objects.get(id=id)
+        result = app.publish_type.get_profiles( host, app.publish_user  )
+        return self._iresult( json.dumps(result) )
+    
+    @login_perm_required(perm_check=True)
+    def post(self, request, *args, **kwargs):
+        extvar = dict()
+        id = request.POST.get('id')
+        app = App.objects.get(id=id)
+        extvar['user'] = app.publish_user
+        extvar['host'] = request.POST.get('host')
+        extvar['filepath'] = request.POST.get('filename')
+        app.publish_type.get_profile_content( app.publish_name, **extvar)
+        
+        profile_content = ""
+        configure_file_name = os.path.basename(extvar['filepath'])
+        local_path = os.path.join(settings.CONFIGURE_BACKUP, app.publish_name, configure_file_name )
+        with open(local_path, 'r' ) as f:
+            content = f.read()
+            charset = chardet.detect(content).get('encoding')
+            profile_content = content.decode(charset).encode('utf-8')
+        return self._iresult( json.dumps( {'code': 1, 'profile_content': profile_content }) )
+        
+    def put(self, request, *args, **kwargs):
+        result = {}
+        extvar = dict()
+        Put = QueryDict(request.body, encoding=request.encoding)
+        id = Put.get('id')
+        app = App.objects.get(id=id)
+        region = Put.get('region', 0)
+        if 0 == int(region):    # Just one
+            extvar['host'] = Put.get('host')
+        else:
+            extvar['nodes'] = AppNode.objects.filter(app = app ).all()
+        extvar['user'] = app.publish_user
+        
+        extvar['configure_file_name'] = os.path.basename( Put.get('configure_file') )
+        configure_file_name = extvar['configure_file_name'] + '.cur'
+        extvar['filepath'] = os.path.join(settings.CONFIGURE_BACKUP, app.publish_name, configure_file_name)
+        path_utils.writedoc2unix(extvar['filepath'], Put.get('profile_content') )
+        data = app.publish_type.save_profile_content(region, **extvar )
+        for host, info in data.items(): 
+            result[host] = info['status']
+        return self._iresult( json.dumps( result ) )
+
+     
+@urls.register
+class BrmServerControl(generic.View, CommonResponse):
+
+    url_regex = r'^brm/servercontrol/$'
+    
+    @login_perm_required(perm_check=True)
+    def get(self, request, *args, **kwargs):
+        id = request.GET.get('id')
+        app = App.objects.get(id=id)
+        target_nodes = AppNode.objects.filter(app = app)
+        handlers = app.publish_type.get_handlers()
+        data = {'name': app.publish_name, 'target_nodes': target_nodes, 'handlers': handlers}
+        return self._isupply_response(request, 'brm/brm_servercontrol.html', data )
+       
+    @login_perm_required(perm_check=True)       
+    def post(self, request, *args, **kwargs):
+        resource = []
+        id = request.POST.get('id')
+        app = App.objects.get(id=id)
+        appname = app.publish_name
+        path_utils.clear_cachr_dir(appname, str(request.user.id)) # clear
+        pubrange = request.POST.get('publish_machine', 'all')
+        
+        nodes = AppNode.objects.filter(app = app ).all()
+        if 'all' != pubrange: 
+            pubnode = []
+            for node in nodes:
+                if not node.machine.ssh_ip in pubrange.split(','):
+                    continue
+                pubnode.append(node)
+        else:
+            pubnode = nodes
+            
+        optype = request.POST.get('optype')
+        info = app.publish_type.get_handlers(optype)
+        
+        for node in pubnode:
+            resource.append({
+                    'host': node.machine.ssh_ip, 
+                    'port': node.machine.ssh_port, 
+                    'user': app.publish_user,
+            })
+        Task.objects.create(
+            route_key = "COMMAND",
+            json_data = json.dumps({
+                'appid': id, 
+                'resource': resource, 
+                'optype': optype,
+                'uid': str(request.user.id),
+                'url': settings.TIMELY_RECORD_URL})
+        )
+        return self._iresult( json.dumps( {'resource':resource, 'cmd':info[0]['cmd'] } ) )
+            

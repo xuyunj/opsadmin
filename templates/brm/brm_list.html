@@ -69,10 +69,10 @@
                                 <span class="caret"></span>
                             </button>
                             <ul class="dropdown-menu" role="menu">
-                                <li><a href="#">服务配置</a></li>
-                                <li><a href="#">启动服务</a></li>
-                                <li><a href="#">关闭服务</a></li>
+                                <li><a href="/brm/configure/?id={{app.id}}">服务配置</a></li>
+                                <li><a href="/brm/servercontrol/?id={{app.id}}">启停服务</a></li>
                                 <li><a href="#">启停监控</a></li>
+                                <li><a href="/brm/record/?id={{app.id}}">发布记录</a></li>
                             </ul>
                         </div>
                   </td>
@@ -266,8 +266,6 @@
                         }
                         var rate = ( parseFloat(current_value)/parseFloat(d.allsize) ) * 100
                         if( parseInt(rate) == 100 ) {
-                            //$("#app_" + d.appid + "_status span").show();
-                            //$("#app_" + d.appid + "_status .progress").hide();
                             window.location.reload();
                         }
                         $("#progress-bar-" + d.appid ).css("width", rate.toFixed(2)+'%' );

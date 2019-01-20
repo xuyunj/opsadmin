@@ -1,6 +1,8 @@
 #coding:utf-8
 import os
+import yaml
 from django.db import models
+from django.conf import settings
 from django.utils import timezone
 from django.utils.encoding import python_2_unicode_compatible
 from ansible.module_utils._text import to_text
@@ -24,18 +26,87 @@ class Template(CommonModel):
     playbook).
     """
     name = models.CharField(unique=True, max_length=30)
+    profile = models.CharField(max_length=100)
+    handlers = models.TextField(null=True, blank=True)
     playbook = models.TextField()
     
     def __str__(self):
         return self.name
+        
+    class Meta:
+        verbose_name = 'Template'
+        verbose_name_plural = verbose_name
       
     @classmethod
     def get_template(cls, name=None):
         return cls.objects.all() if not name else cls.objects.filter(name=name).all()
-    
-    class Meta:
-        verbose_name = 'Template'
-        verbose_name_plural = verbose_name
+        
+    def get_profiles(self, host, user):
+        machine = Machine.objects.get(ssh_ip=host)
+        ansib = AnsibleAPI([{
+            'host': machine.ssh_ip, 
+            'port': machine.ssh_port, 
+            'user': user,
+        }])
+        result = ansib.exec_shell( "ls -l %s | grep ^-" % self.profile )
+        if result[host]['status'] != 'ok':
+            out = result[host]['result']['stderr']
+        else:
+            stdout_lines = result[host]['result']['stdout_lines']
+            out = [ os.path.join(self.profile,line.split(' ')[-1]) for line in stdout_lines ]
+        return {'status': result[host]['status'], 'out': out }
+        
+    def get_profile_content(self, app_name, **kwargs):
+        machine = Machine.objects.get(ssh_ip=kwargs['host'])
+        ansib = AnsibleAPI([{
+            'host': machine.ssh_ip, 
+            'port': machine.ssh_port, 
+            'user': kwargs['user'],
+        }])
+        local_path = os.path.join(
+            settings.CONFIGURE_BACKUP, 
+            app_name,
+            #'{{ inventory_hostname }}',
+            os.path.basename(kwargs['filepath']) )
+        return ansib.get_file(kwargs['filepath'],  local_path)
+        
+    def save_profile_content(self, region, **kwargs):
+        resource = []
+        if 0 == int(region):
+            host = kwargs.get('host')
+            machine = Machine.objects.get(ssh_ip=host)
+            resource.append({
+                'host': machine.ssh_ip, 
+                'port': machine.ssh_port, 
+                'user': kwargs.get('user'),
+            })
+        else:
+            nodes = kwargs.get('nodes')
+            for node in nodes:
+                resource.append({
+                    'host': node.machine.ssh_ip, 
+                    'port': node.machine.ssh_port, 
+                    'user': kwargs.get('user'),
+                })
+        ansib = AnsibleAPI(resource)
+        remote_path = os.path.join(self.profile, kwargs['configure_file_name'] )
+        return ansib.put_file(kwargs['filepath'], remote_path )
+        
+    def get_handlers(self, optype=None):
+        handlers_dict = {}
+        handlers = yaml.load(self.handlers) if self.handlers else []
+        map(lambda handler: handlers_dict.update(handler), handlers )
+        if optype:
+            return handlers_dict.get(optype)
+        return handlers_dict
+        
+    def do_handle(self, name, resource, optype, uid, url ):
+        handlers_dict = {}
+        handlers = yaml.load(self.handlers) if self.handlers else []
+        map(lambda handler: handlers_dict.update(handler), handlers )
+        info = handlers_dict.get(optype)
+        ansib = AnsibleAPI(resource)
+        return ansib.exec_timely_command( info[0]['cmd'], url, name, uid )
         
         
 class AppNode(models.Model):

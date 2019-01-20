@@ -119,13 +119,19 @@ LOGOUT_URL = '/logout/'
 MENU_SESSION_KEY = '_menu'
 PERMISSION_SESSION_KEY ='_permission' 
 
+# Set logger
+from utils.logutil import setLogger
+setLogger(os.path.join(BASE_DIR, 'logs', 'opsadmin.log'))
+
 # websocket notify url
 WEBSOCKET_NOTIFY_URL = 'http://127.0.0.1:9000/sendto'
 
 # svn configure
-SVN_USER = ''
+SVN_USER = 'xuyj'
 SVN_PASSWD = ''
-
-SVN_OUTPATH = '/tmp/.deploy'
+SVN_OUTPATH = os.path.join(BASE_DIR, 'cache', 'deploy')
+CONFIGURE_BACKUP = os.path.join(BASE_DIR, 'cache', 'configure')
+COMMAND_TIMELY_RECORD = os.path.join(BASE_DIR, 'cache', 'command')
+TIMELY_RECORD_URL = 'http://127.0.0.1:8000/gm/timelyRecord/'
 
 

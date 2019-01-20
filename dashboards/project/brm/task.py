@@ -6,7 +6,8 @@ from django.conf import settings
 from .models import App,Record
 from dashboards.executor.management.event import event_ins
 from utils import path_utils
-
+import traceback
+import logging
 
 
 class SvnClient(object):
@@ -19,7 +20,7 @@ class SvnClient(object):
 
 @event_ins.register(route_key='RELEASE')
 def do_release_task(data):
-    print 'data--->: ', data
+    logging.info('recv data: %s', data)
     data = json.loads(data)
     webscoketid = data['websocketid']
     app = App.objects.get(id=data['appid'])
@@ -55,11 +56,31 @@ def do_release_task(data):
         app.current_version = current_version
         playbook_result['version'] = current_version
         app.save()
-        ret = Record.objects.create( app = app, 
+        result = Record.objects.create( app = app, 
                                   action = 'RELEASE',
                                   status = operation_status,
                                   details = json.dumps(playbook_result),
                                   created_by = data['username'],)
-        print 'ret-------->: ', ret
+        logging.info("do_release_task[result]: %s", result)
     except Exception, e:
-        print 'run_playbook error: ', e
+        logging.error('error in do_release_task: %s', traceback.format_exc() )
+        
+
+@event_ins.register(route_key='COMMAND')        
+def do_command_task(data):
+    try:
+        logging.info('recv data: %s', data)
+        data = json.loads(data)
+        app = App.objects.get(id=data['appid'])
+        result = app.publish_type.do_handle(
+            app.publish_name, data['resource'], data['optype'], data['uid'], data['url'] )
+        for host, info in result.items():
+            record_path = os.path.join(
+                settings.COMMAND_TIMELY_RECORD, app.publish_name, data['uid'], host )
+            with open(record_path, 'a+') as f:
+                f.write('finish')
+                f.flush()
+        logging.info("do_command_task[result]: %s", result)
+    except:
+        logging.error('error in do_command_task: %s', traceback.format_exc() )
+    

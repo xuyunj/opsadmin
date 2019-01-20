@@ -1,0 +1,228 @@
+{% extends 'base.html'%}
+
+{% block content %}
+
+<section class="content">
+    
+    <div class="box">
+        <form class="form-horizontal" id="configure_form">
+              <div class="box-body">
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">操作范围</label>
+                    <div class="col-sm-10" >
+                        <div class="radio">
+                            <label>
+                                <input type="radio" name="rangetype" value="0" > 所有&#12288;
+                            </label>
+                            <label>
+                                <input type="radio" name="rangetype" value="1" checked > 自选&#12288;
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group" id="appnodes" >
+                    <label class="col-sm-2 control-label">机器列表</label>
+                    <div class="col-sm-3" style="width: 24%">
+                        <select id="source" multiple class="form-control" size=12>
+                            {% for node in target_nodes %}
+                            <option value="{{node.machine.ssh_ip}}" >{{node.machine.ssh_ip}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-sm-1" style="margin: 0 -1.8% 0 -1.2%">
+                        <div style="padding: 66px 0 10px 0;">
+                            <input type="button" id="btn_add" value="&gt;&gt;" />
+                        </div>
+                        <input type="button" id="btn_remove" value="&lt;&lt;"/>
+                    </div>
+                    <div class="col-sm-3" style="margin-left: -3%;width: 24%">
+                        <select id="target" multiple class="form-control" size=12 >
+                            
+                        </select>
+                    </div>
+                    <input type="hidden" id="publish_machine" name="publish_machine" />
+                </div>
+                
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">操作类型</label>
+                    <div class="col-sm-10" >
+                        <div class="radio">
+                            {% for k, v in handlers.items %}
+                            <label>
+                                <input type="radio" name="optype" value="{{k}}" > {{v.0.name}}&#12288;
+                            </label>
+                            <!--<label>
+                                <input type="radio" name="optype" value="2" > 关闭服务&#12288;
+                            </label> -->
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="col-sm-2 control-label"></label> 
+                    <div class="col-sm-4">
+                        <button type="button" class="btn btn-info" id="execute" >确定</button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">执行结果</label> 
+                    <div class="col-sm-6">
+                        <pre id="result_deploykey" style="height:55px;" ></pre>
+                    </div>
+                </div>
+                
+              </div>
+              <!-- /.box-body -->
+        </form>
+    </div>
+    
+    <div id="realout-modal" class="modal">
+          <div class="modal-dialog">
+            <div class="modal-content">
+             
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                  <span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title"></h4>
+              </div>
+              <div class="modal-body">
+                <pre id="realout-content" style="height:200px;"></pre>
+              </div>
+              <div class="modal-footer">
+                <button type="button" class="btn btn-default pull-right" data-dismiss="modal">Close</button>
+              </div>
+          </div>
+          <!-- /.modal-content -->
+       </div>
+       <!-- /.modal-dialog -->
+    </div>
+    <!-- /.modal -->
+
+</section>
+
+{% endblock %}
+
+{% block script %}
+<script>
+    //$(document).on("show.bs.modal", ".modal", function() {
+    //    //$(this).draggable();
+    //    //$(this).css("overflow-y", "scroll");
+    //    var dialog = $(this).find(".modal-dialog");
+    //    dialog.draggable({
+    //        handle: ".modal-header",
+    //        cursor: 'move',
+    //        refreshPositions: false,
+    //        scroll: false,
+    //        containment: "parent"
+    //    });
+    //    $(this).css("overflow", "hidden");
+    //});
+    
+    $(document).ready(function(){
+        $(".content-header h1").html('启停服务' + '({{name}})');
+        
+        $('input[name="rangetype"]').click(function(){
+            $("#target").find("option:selected").each(function(){    
+                $(this).appendTo("#source");
+            });
+            if ( 1 == parseInt(this.value) ) {
+                $("#appnodes").show()
+            } else {
+                $("#appnodes").hide();
+            }
+        });
+        
+        $("#btn_add").click(function(){
+            $("#source").find("option:selected").each(function(){
+                $(this).appendTo("#target");
+            });
+        });    
+        $("#btn_remove").click(function(){
+            $("#target").find("option:selected").each(function(){    
+                $(this).appendTo("#source");
+            });
+        });
+        
+        $("#execute").click(function(){
+            //confirm()
+            var publish_machine = "";
+            var id = GetQueryString('id');
+            //$("#result_deploykey").text('');
+            var optype = $('input:radio[name="optype"]:checked').val();
+            if (!optype) {
+                alert("请选择要操作的类型");
+                return;
+            }
+            var rangetype=$('input:radio[name="rangetype"]:checked').val();
+            if (1 == parseInt(rangetype)) {
+                $("#target option").each(function(){
+                    publish_machine += $(this).val() + ",";
+                })
+            } else {
+                publish_machine = 'all';
+            }
+            if (publish_machine != 'all' && !publish_machine) {
+                alert("自选，请至少选择一台机器");
+                return;
+            }
+            
+            $.ajax({    
+                type: 'post',
+                dataType:'json',
+                url: '/brm/servercontrol/',
+                data: {
+                    'id': id, 
+                    'publish_machine': publish_machine, 
+                    'optype': optype,
+                },
+                success:function(data){
+                    console.log(data)
+                    var result = "";
+                    for(var i=0; i<data.resource.length; i++) {
+                        var reala = $("<a href='javascript:void(0)' >" +  
+                            data.resource[i].host + "<span id='" + "reala_" + data.resource[i].host + "'>正在执行</span>(" + data.cmd + "),点击查看结果</a>");
+                        reala.attr({"onclick": "realout('" + data.resource[i].host +"')"});
+                        result += reala.prop('outerHTML');
+                    }
+                    $("#result_deploykey").append(result);
+                }    
+            });   
+        });
+    })
+    
+    function GetQueryString(name) {
+        var reg = new RegExp("(^|&)"+ name +"=([^&]*)(&|$)");
+        var r = window.location.search.substr(1).match(reg);
+        if(r!=null)return  unescape(r[2]); return null;
+    }
+    
+    function realout(host) {
+        id = GetQueryString('id');
+        $("#realout-modal .modal-title").text(host + '-执行详情')
+        $("#realout-modal").modal('show');
+        var interval = setInterval(function(){   
+            $.ajax({    
+                type: 'get',
+                dataType:'json',
+                url: '/gm/timelyRecord/',
+                data: {'id': id, 'host': host },
+                success:function(data){
+                    console.log(data)
+                    //$("#realout-modal .modal-body").text(data.content);
+                    $("#realout-content").text(data.content);
+                    if( 1 == parseInt(data.finish))  {
+                        clearInterval(interval);
+                        var realspan = document.getElementById("reala_" + host );
+                        realspan.innerHTML = "执行完成(status=ok)";
+                        console.log(realspan);
+                    }
+                }    
+            });    
+        },2000 ); 
+    }
+
+</script>
+{% endblock %}

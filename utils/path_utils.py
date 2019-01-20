@@ -1,10 +1,16 @@
 import os
 import shutil
+from django.conf import settings
 
 def ensure_dir(f):
     d = os.path.realpath(f)
     if not os.path.exists(d):
         os.makedirs(d,mode=0755)
+        
+def clear_cachr_dir(name, uid):
+    cachedir = os.path.join(settings.COMMAND_TIMELY_RECORD, name, uid )
+    if os.path.exists(cachedir):
+        shutil.rmtree( cachedir  )
         
 def get_version(path):
     """
@@ -39,3 +45,15 @@ def filter_path(path, filter = []):
                 continue
             shutil.rmtree( os.path.join(root, dirname) )
     return version,filesize
+    
+def writedoc2unix(filepath, content ):
+    """
+    Doc formats Convert to unix formats.
+    :arg string: File absolute path.
+    :content string: File content from web client.
+    """
+    unix_content = ""
+    for line in content.split('\r\n'):
+        unix_content += line.rstrip() + "\n"
+    with open(filepath, 'w') as f:
+        f.write( unix_content )

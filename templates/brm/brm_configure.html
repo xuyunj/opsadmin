@@ -1,0 +1,220 @@
+{% extends 'base.html'%}
+
+{% block content %}
+
+<section class="content">
+    
+    <div class="box">
+        <form class="form-horizontal" id="configure_form">
+              <div class="box-body">
+                <div class="form-group">
+                  <label class="col-sm-2 control-label">主机</label>
+
+                  <div class="col-sm-4">
+                    <select class="form-control" id="host">
+                        <option value="" >请选择主机</option>
+                        {% for node in target_nodes %}
+                        <option value="{{node.machine.ssh_ip}}" >{{node.machine.ssh_ip}}</option>
+                        {% endfor %}
+                    </select>
+                  </div>
+                  
+                  <div class="col-sm-2">
+                    <div class="radio">
+                      <label>
+                        <input type="radio" name="operate_mode" value="0" > 修改配置&#12288;
+                      </label>
+                      <label>
+                        <input type="radio" name="operate_mode" value="1" > 新增配置
+                      </label>
+                    </div>
+                  </div>
+                  
+                </div>
+                <div class="form-group" id="configure_files_area" style="display:none;" >
+                  <label class="col-sm-2 control-label">配置文件</label> 
+
+                  <div class="col-sm-4" >
+                    <select class="form-control" onmousewheel="return false" id="configure_files">
+                    </select>
+                    <input type="text" class="form-control" id="configure_file" style="display:none;" placeholder="输入文件名" />
+                  </div>
+                </div>
+                
+                <div class="form-group">
+                  <label class="col-sm-2 control-label">内容</label> 
+
+                  <div class="col-sm-8">
+                        <pre ><textarea class="form-control" rows="15" id="profile_content" ></textarea></pre>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                  <label class="col-sm-2 control-label">保存编码</label> 
+
+                  <div class="col-sm-4">
+                        <select class="form-control" id="charset" name="charset" >
+                            <option value="utf-8" >utf-8</option>
+                            <option value="gbk" >gbk</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                  <div class="col-sm-offset-2 col-sm-10">
+                    <div class="radio">
+                      <label>
+                        <input type="radio" name="region" value="0" checked > Just One&#12288;
+                      </label>
+                       <label>
+                        <input type="radio" name="region" value="1"> All
+                      </label>
+                    </div>
+                  </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-2 control-label"></label> 
+                    <div class="col-sm-4">
+                        <button type="button" class="btn btn-info" id="save_configure_file" >Save</button>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">执行结果</label> 
+                    <div class="col-sm-8">
+                        <pre id="result_deploykey" style="height:35px;" ></pre>
+                    </div>
+                </div>
+                
+              </div>
+              <!-- /.box-body -->
+              <!--<div class="box-footer">
+                <button type="button" class="btn btn-info pull-right" id="save_configure_file" >Save</button>
+              </div> -->
+              <!-- /.box-footer -->
+        </form>
+    </div>
+
+</section>
+
+{% endblock %}
+
+{% block script %}
+<script>
+    $(document).ready(function(){
+        $(".content-header h1").html('服务配置' + '({{name}})');
+        
+        $("#host").change(function(){
+            var host = this.value;
+            $('#configure_form')[0].reset();
+            $("#host").val(host);
+        });
+        
+        $('input[name="operate_mode"]').click(function(){
+            var configure_files_html = ""
+            if ( 0 == parseInt(this.value) ) {
+                var id = GetQueryString('id');
+                var host = $("#host").val();
+                $("#configure_file").hide();
+                $.ajax({    
+                    dataType:'json',
+                    url: '/brm/configure/files/',
+                    data: {'id': id, 'host': host },
+                    success:function(data){
+                        $("#configure_files").empty();
+                        $("#configure_files").append(new Option("请选择配置文件", "") )
+                        if( 'ok' == data.status) {
+                            for(var i=0; i<data.out.length; i++ ) {
+                                var o = new Option(data.out[i], data.out[i]);
+                                $("#configure_files").append(o);
+                            }
+                            $("#configure_files").show();
+                            $("#configure_files_area").show();
+                        } else {
+                            alert(data.out);
+                        }
+                    }    
+                });   
+            } else {
+                $("#configure_files").hide();
+                $("#configure_file").show();
+                $("#configure_files_area").show();
+            }
+        });
+        
+        $("#configure_files").change(function(){
+            console.log(this.value)
+            $("#profile_content").val("");
+            if (!this.value)
+                return
+            var id = GetQueryString('id');
+            var host = $("#host").val();
+            $.ajax({    
+                type: 'post',
+                dataType:'json',
+                url: '/brm/configure/files/',
+                data: {'id': id, 'host': host, 'filename': this.value },
+                success:function(data){
+                    $("#profile_content").val(data.profile_content);
+                }    
+            });   
+        });
+        
+        $("#save_configure_file").click(function(){
+            var id = GetQueryString('id');
+            var host = $("#host").val();
+            if(!host){
+                alert("请选择主机");
+                return;
+            }
+            var operate_mode = $(".operate_mode").val();
+            if ( 0 == parseInt(this.value) ) {
+                var configure_file = $("#configure_files").val();
+                if(!configure_file){
+                    alert("请选择配置文件");
+                    return;
+                }
+            } else {
+                var configure_file = $("#configure_file").val();
+                if(!configure_file){
+                    alert("请输入要增加的配置文件名");
+                    return;
+                }
+            }
+            var profile_content = $("#profile_content").val();
+            if(!profile_content) {
+                alert("内容为空");
+                return;
+            }
+            var charset = $("#charset").val();
+            var region = $('input:radio[name="region"]:checked').val();
+            $.ajax({    
+                type: 'put',
+                dataType:'json',
+                url: '/brm/configure/files/',
+                data: {'id': id, 
+                       'host': host, 
+                       'region': region,
+                       'opmode': operate_mode,
+                       'configure_file': configure_file,
+                       'profile_content': profile_content,
+                       'charset': charset,
+                },
+                success:function(data){
+                    for(var key in data) {
+                        $("#result_deploykey").append(key + " " + data[key]+"<br/>")
+                    }
+                }    
+            });   
+        })
+ 
+    })
+    
+    function GetQueryString(name) {
+        var reg = new RegExp("(^|&)"+ name +"=([^&]*)(&|$)");
+        var r = window.location.search.substr(1).match(reg);
+        if(r!=null)return  unescape(r[2]); return null;
+    }
+
+</script>
+{% endblock %}
