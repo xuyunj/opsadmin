@@ -71,7 +71,7 @@
                                 <select id="publish_user" name="publish_user" class="form-control">
                                     <option value="">请选择用户</option>
                                     {% for publish_user in publish_users %}
-                                    <option value="{{publish_user.ssh_username}}" {% ifequal app.publish_user publish_user.ssh_username %} selected {% endifequal %} >{{publish_user.ssh_username}}</option>
+                                    <option value="{{publish_user.user_id}}" {% ifequal app.publish_user publish_user.user_id %} selected {% endifequal %} >{{publish_user.user_id}}</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -81,7 +81,7 @@
                             <div class="col-sm-3" style="width: 24%">
                                 <select id="source" multiple class="form-control" size=12>
                                     {% for machine in source_nodes%}
-                                    <option value="{{machine.ssh_machine.id}}" >{{machine.ssh_machine.ssh_ip}}</option>
+                                    <option value="{{machine.virthost.id}}" >{{machine.virthost.business_ip}}</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -94,7 +94,7 @@
                             <div class="col-sm-3" style="margin-left: -3%;width: 24%">
                                 <select id="target" multiple class="form-control" size=12 >
                                     {% for node in target_nodes%}
-                                    <option value="{{node.machine.id}}" >{{node.machine.ssh_ip}}</option>
+                                    <option value="{{node.machine.id}}" >{{node.machine.business_ip}}</option>
                                     {% endfor %}
                                 </select>
                             </div>

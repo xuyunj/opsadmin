@@ -10,11 +10,7 @@
             <div class="box-header">
               <h3 class="box-title"></h3>
                 
-              <div class="box-tools">
-                <div class="input-group input-group-sm pull-left" style="margin-right:5px;" >
-                    <button type="button" class="btn btn-default btn-sm" onclick="location.href='/gm/machine/add/'">
-                        <i class="fa fa-fw fa-plus"></i>添加主机</button>
-                </div>
+              <div class="box-tools" >
                 <div class="input-group input-group-sm" style="width: 150px;">
                   <input type="text" name="table_search" class="form-control pull-right" placeholder="Search">
 
@@ -28,26 +24,21 @@
             <div class="box-body no-padding">
               <table class="table table-bordered">
                 <tr>
-                  <th style="width: 10px">#</th>
-                  <th>主机IP</th>
-                  <th>SSH端口</th>
-                  <th>系统类型</th>
-                  <th>创建者</th>
-                  <th>创建时间</th>
-                  <th>操作</th>
+                  <th>机房名称</th>
+                  <th>机柜数量</th>
+                  <th>设备数量</th>
+                  <th>位置</th>
+                  <th>联系人</th>
+                  <th>备注</th>
                 </tr>
-                {% for record in records %}
+                {% for idc in idcs %}
                 <tr>
-                  <td>{{record.id}}.</td>
-                  <td>{{record.ssh_ip}}</td>
-                  <td>{{record.ssh_port}}</td>
-                  <td>{{record.get_os_type_display}}</td>
-                  <td>{{record.created_by}}</td>
-                  <td>{{record.created_time}}</td>
-                  <td>
-                    <button type="button" class="btn btn-info btn-xs">编辑</button>
-                    <button type="button" class="btn btn-danger  btn-xs">删除</button>
-                  </td>
+                  <td><a href="/cmdb/cabinet/?idc_id={{idc.id}}">{{ idc.name}}</a></td>
+                  <td>{{ idc.cabinet_set.all|length|default:'N/A' }}</td>
+                  <td>{{ idc.devices|default:'N/A' }}</td>
+                  <td>{{ idc.address }}</td>
+                  <td>{{ idc.phone|default:'N/A' }}</td>
+                  <td>{{idc.memo| default:'N/A'}}</td>
                 </tr>
                 {% endfor %}
               </table>

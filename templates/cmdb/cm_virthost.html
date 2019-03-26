@@ -1,0 +1,128 @@
+{% extends 'base.html'%}
+
+{% block head %}
+<style>
+.toast-center-center {
+    top: 30%;
+    left: 50%;
+    margin-top: -30px;
+    margin-left: -150px;
+}
+</style>
+{% endblock %}
+  
+{% block content %}
+
+<section class="content">
+    
+
+        <div class="box">
+            <div class="box-header">
+              <h3 class="box-title"></h3>
+              
+              <div class="input-group input-group-sm pull-left" style="margin-right:5px;" >
+                    <button type="button" class="btn btn-default btn-sm" onclick="location.href='/gm/machine/add/'">
+                        <i class="fa fa-fw fa-plus"></i>资产添加</button>
+                </div>
+                
+              <div class="box-tools" style="margin-top: 5px;">
+                <div class="input-group input-group-sm" style="width: 150px;">
+                  <input type="text" name="table_search" class="form-control pull-right" placeholder="Search">
+
+                  <div class="input-group-btn">
+                    <button type="submit" class="btn btn-default"><i class="fa fa-search"></i></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- /.box-header -->
+            <div class="box-body no-padding">
+              <table class="table table-bordered">
+                <tr>
+                  <th>序号</th>
+                  <th>主机名</th>
+                  <th>业务IP</th>
+                  <th>系统类型</th>
+                  <th>CPU(核)</th>
+                  <th>内存(M)</th>
+                  <th>硬盘(G)</th>
+                  <th>业务线</th>
+                  <th>状态</th>
+                  <th>采集方式</th>
+                  <th>更新日期</th>
+                  <th>操作</th>
+                </tr>
+                {% for virthost in virthosts %}
+                <tr>
+                  <td>{{virthost.id}}</td>
+                  <td><a href="/cmdb/virthost/detail/?id={{virthost.id}}" >{{virthost.virtbasic.hostname}}</a></td>
+                  <td>{{virthost.business_ip}}</td>
+                  <td>{{virthost.virtbasic.os_type}}</td>
+                  <td>{{virthost.virtbasic.cpu_core_count}}</td>
+                  <td>{{virthost.virtbasic.memory_size}}</td>
+                  <td>{{virthost.virtbasic.disk_size}}</td>
+                  <td>{{virthost.business_unit.name| default:'N/A'}}</td>
+                  <td><label class="label label-success">{{virthost.get_status_display}}</label></td>
+                  <td>{{virthost.gather_agent.get_genre_display}}</td>
+                  <td>{{virthost.updated_time|date:"Y/m/d H:m:s" }}</td>
+                  <td>
+                    <ul>
+                        <li style="list-style:none;float: left;margin-right: 12px;" >
+                            <a href="javascript:void(0)" onclick="virt_refresh( {{virthost.id}}, '{{virthost.business_ip}}' )" ><i class="fa fa-fw fa-refresh"></i></a>
+                        </li>
+                        <li style="list-style:none;float: left;margin-right: 12px;" >
+                            <a href="#"><i class="fa fa-fw fa-edit"></i></a>
+                        </li>
+                        <li style="list-style:none;float: left;margin-right: 12px;" >
+                            <a href="#"><i class="fa fa-fw fa-remove"></i></a>
+                        </li>
+                    </ul>
+                  </td>
+                </tr>
+                {% endfor %}
+              </table>
+            </div>
+            <!-- /.box-body -->
+            <div class="box-footer clearfix">
+              <ul class="pagination pagination-sm no-margin pull-right">
+                <li><a href="#">&laquo;</a></li>
+                <li><a href="#">1</a></li>
+                <li><a href="#">2</a></li>
+                <li><a href="#">3</a></li>
+                <li><a href="#">&raquo;</a></li>
+              </ul>
+            </div>
+        </div>
+        <!-- /.box -->
+
+</section>
+
+{% endblock %}
+
+{% block script %}
+<script src="/static/plugins/toastr/toastr.min.js"></script>
+<link rel="stylesheet" href="/static/plugins/toastr/toastr.min.css">
+<script>
+
+    toastr.options = {  
+        "closeButton": true,
+        "positionClass": "toast-center-center",  
+        "timeOut": 10000,
+    };  
+
+    function virt_refresh(id, ip) {
+        toastr.success(ip + "信息更新中。。。");
+        $.ajax({    
+            url: '/cmdb/virthost/refresh/',
+            data: {'id':　id},
+            success:function(data){   
+                toastr.clear();
+                alert('refresh ' + data);
+                //$(".toast-message").text("hahha")
+                window.location.reload();
+            }    
+        });
+    }
+    
+</script>
+{% endblock %}

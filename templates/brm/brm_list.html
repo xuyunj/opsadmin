@@ -245,6 +245,7 @@
         
         function connect(uuid) {
             var host = "ws://192.168.75.131:9000/channel?udid=" + uuid;
+            console.log(host)
             socket = new WebSocket(host);
                 
             try {
@@ -258,6 +259,7 @@
                         //console.log(  msg.data );
                         var current_value;
                         d = JSON.parse(msg.data);
+                        console.log(d)
                         if (d.plus == 1) {
                             value += d.value
                             current_value = value

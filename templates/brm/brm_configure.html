@@ -14,7 +14,7 @@
                     <select class="form-control" id="host">
                         <option value="" >请选择主机</option>
                         {% for node in target_nodes %}
-                        <option value="{{node.machine.ssh_ip}}" >{{node.machine.ssh_ip}}</option>
+                        <option value="{{node.machine.business_ip}}" >{{node.machine.business_ip}}</option>
                         {% endfor %}
                     </select>
                   </div>

@@ -77,6 +77,9 @@ class AnsibleAPI(object):
     """
 
     def __init__(self, resource, passwords=None, *args, **kwargs):
+    
+        connection = 'myparamiko'   # Default connection plugins
+        
         module_path = [
             os.path.abspath( os.path.join(os.path.dirname(os.path.abspath(__file__)), '../modules') ),
         ]
@@ -85,8 +88,12 @@ class AnsibleAPI(object):
         # since API is constructed for CLI it expects certain options to always be set, named tuple 'fakes' the args parsing options object
         Options = namedtuple('Options', ['connection', 'module_path', 'forks', 'become','become_method',
                              'become_user', 'check', 'diff', 'listhosts', 'listtasks', 'listtags','syntax' ])
+                          
+        if kwargs.get('connection'):
+            connection = kwargs['connection']
+            
         self.options = Options( 
-                         connection = 'myparamiko',
+                         connection = connection,
                          module_path=module_path, 
                          forks=10, 
                          become=None,
@@ -199,5 +206,11 @@ class AnsibleAPI(object):
         module_args = 'command="%s" url=%s name=%s uid=%s' %(cmd, url, name, uid)
         self.run('my_command', module_args)
         return self.callback.results
+        
+    def gather_facts(self, filter=''):
+        module_args = 'filter=%s' % filter
+        self.run('setup', module_args)
+        return self.callback.results
+        
     
     

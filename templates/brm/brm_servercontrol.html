@@ -26,7 +26,7 @@
                     <div class="col-sm-3" style="width: 24%">
                         <select id="source" multiple class="form-control" size=12>
                             {% for node in target_nodes %}
-                            <option value="{{node.machine.ssh_ip}}" >{{node.machine.ssh_ip}}</option>
+                            <option value="{{node.machine.business_ip}}" >{{node.machine.business_ip}}</option>
                             {% endfor %}
                         </select>
                     </div>

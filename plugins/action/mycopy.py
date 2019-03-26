@@ -22,8 +22,8 @@ from ansible.plugins.action.copy import ActionModule as CopyModule
 
 class ActionModule(CopyModule):
 
-    def _transfer_file(self, local_path, remote_path, callback=None):
-        self._connection.put_file(local_path, remote_path, callback )
+    def _transfer_file(self, local_path, remote_path, task_vars=None):
+        self._connection.put_file(local_path, remote_path, task_vars )
         return remote_path
     
     def _copy_file(self, source_full, source_rel, content, content_tempfile,
@@ -33,18 +33,7 @@ class ActionModule(CopyModule):
         raw = boolean(self._task.args.get('raw', 'no'), strict=False)
 
         result = {}
-        result['diff'] = []
-                
-        def callback(value, total ):
-            for callback_plugin in callback_loader.all(class_only=True):
-                plugin_func = getattr(callback_plugin, 'runner_on_rate', None)
-                if plugin_func:
-                    extra = dict(appid=task_vars['appid'], 
-                                 name=os.path.basename(source_full),
-                                 socketid=task_vars['webscoketid'],
-                                 allsize=task_vars['total'] )
-                    plugin_func( value, total, **extra )
-                    break
+        result['diff'] = []  
             
         # If the local file does not exist, get_real_file() raises AnsibleFileNotFound
         try:
@@ -108,9 +97,9 @@ class ActionModule(CopyModule):
             remote_path = None
 
             if not raw:
-                remote_path = self._transfer_file(source_full, tmp_src, callback)
+                remote_path = self._transfer_file(source_full, tmp_src, task_vars)
             else:
-                self._transfer_file(source_full, dest_file, callback)
+                self._transfer_file(source_full, dest_file, task_vars)
 
             # We have copied the file remotely and no longer require our content_tempfile
             self._remove_tempfile_if_content_defined(content, content_tempfile)

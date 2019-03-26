@@ -38,7 +38,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'authority',
-    'dashboards.project.general',
+    'dashboards.project.cmdb',
     'dashboards.project.brm',
     'dashboards.executor',
     'dashboards.websocket',
@@ -128,7 +128,7 @@ WEBSOCKET_NOTIFY_URL = 'http://127.0.0.1:9000/sendto'
 
 # svn configure
 SVN_USER = 'xuyj'
-SVN_PASSWD = ''
+SVN_PASSWD = 'xuyj123456'
 SVN_OUTPATH = os.path.join(BASE_DIR, 'cache', 'deploy')
 CONFIGURE_BACKUP = os.path.join(BASE_DIR, 'cache', 'configure')
 COMMAND_TIMELY_RECORD = os.path.join(BASE_DIR, 'cache', 'command')

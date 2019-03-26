@@ -1,0 +1,102 @@
+{% extends 'base.html'%}
+
+
+{% block content %}
+
+<section class="content">
+    
+
+        <div class="box">
+            <div class="box-header">
+              <h3 class="box-title"></h3>
+              
+              <div class="input-group input-group-sm pull-left" style="margin-right:5px;" >
+                    <button type="button" class="btn btn-default btn-sm" onclick="location.href='/gm/machine/add/'">
+                        <i class="fa fa-fw fa-plus"></i>资产添加</button>
+                </div>
+                
+              <div class="box-tools" style="margin-top: 5px;">
+                <div class="input-group input-group-sm" style="width: 150px;">
+                  <input type="text" name="table_search" class="form-control pull-right" placeholder="Search">
+
+                  <div class="input-group-btn">
+                    <button type="submit" class="btn btn-default"><i class="fa fa-search"></i></button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- /.box-header -->
+            <div class="box-body no-padding">
+              <table class="table table-bordered">
+                <tr>
+                  <th>序号</th>
+                  <th>资产类型</th>
+                  <th>子类型</th>
+                  <th>资产条码</th>
+                  <th>品牌</th>
+                  <th>规格型号</th>
+                  <th>SN</th>
+                  <th>状态</th>
+                  <th>位置</th>
+                  <th>更新日期</th>
+                  <!--<th>操作</th> -->
+                </tr>
+                {% for asset in assets %}
+                <tr>
+                  <td>{{asset.id}}</td>
+                  {% if asset.category == 1 %}
+                      <td class="text-green text-bold">{{ asset.get_category_display }}</td>
+                      <td>{{ asset.serverdevice.get_category_display }}</td>
+                  {% elif asset.category == 2 %}
+                      <td class="text-yellow text-bold">{{ asset.category_display }}</td>
+                      <td>{{ asset.networkdevice.get_category_display }}</td>
+                  {% elif asset.category == 3 %}
+                      <td class="text-blue text-bold">{{ asset.get_category_display }}</td>
+                      <td>{{ asset.storagedevice.get_category_display }}</td>
+                  {% elif asset.category == 4 %}
+                      <td class="text-red text-bold">{{ asset.get_category_display }}</td>
+                      <td>{{ asset.securitydevice.get_category_display }}</td>
+                  {% elif asset.category == 5 %}
+                      <td class="text-red text-bold">{{ asset.get_category_display }}</td>
+                      <td>{{ asset.software.get_category_display }}</td>
+                  {% endif %}
+                  <td><a href="/cmdb/detail/?asset_id={{asset.id}}" >{{ asset.name }}</a></td>
+                  <td>{{asset.oem.name}}</td>
+                  <td>{{asset.serverdevice.model}}</td>
+                  <td>{{asset.sn}}</td>
+                  <td><label class="label label-success">{{ asset.get_status_display }}</label></td>
+                  <td>{{asset.serverdevice.cabinet}}|{{asset.serverdevice.ordinal}}</td>
+                  <!--<td>
+                    <ul>
+                        <li style="list-style:none;float: left;margin-right: 12px;" >
+                            <a href="#"><i class="fa fa-fw fa-refresh"></i>更新</a>
+                        </li>
+                        <li style="list-style:none;float: left;margin-right: 12px;" >
+                            <a href="#"><i class="fa fa-fw fa-edit"></i>编辑</a>
+                        </li>
+                        <li style="list-style:none;float: left;margin-right: 12px;" >
+                            <a href="#"><i class="fa fa-fw fa-remove"></i>删除</a>
+                        </li>
+                    </ul>
+                  </td> -->
+                  <td>{{asset.updated_time|date:"Y/m/d H:m:s" }}</td>
+                </tr>
+                {% endfor %}
+              </table>
+            </div>
+            <!-- /.box-body -->
+            <div class="box-footer clearfix">
+              <ul class="pagination pagination-sm no-margin pull-right">
+                <li><a href="#">&laquo;</a></li>
+                <li><a href="#">1</a></li>
+                <li><a href="#">2</a></li>
+                <li><a href="#">3</a></li>
+                <li><a href="#">&raquo;</a></li>
+              </ul>
+            </div>
+        </div>
+        <!-- /.box -->
+
+</section>
+
+{% endblock %}

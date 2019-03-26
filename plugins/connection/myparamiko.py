@@ -130,14 +130,23 @@ except ImportError:
     from ansible.utils.display import Display
     display = Display()
 
-
+import json
+import urllib
+import urllib2
+if not os.environ.get('DJANGO_SETTINGS_MODULE'):
+    import sys
+    sys.path.append('/home/service/opsadmin')
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "settings")
+from django.conf import settings
+    
+    
 class Connection(ParamikoConnection):
     ''' SSH based connections with Paramiko '''
 
     transport = 'myparamiko'
     _log_channel = None
 
-    def put_file(self, in_path, out_path, callback=None):
+    def put_file(self, in_path, out_path, task_vars=None):
         ''' transfer a file from local to remote '''
 
         super(Connection, self).put_file(in_path, out_path)
@@ -153,6 +162,22 @@ class Connection(ParamikoConnection):
             raise AnsibleError("failed to open a SFTP connection (%s)" % e)
 
         try:
+            callback = None
+            if 'source' == os.path.basename(out_path) and task_vars:
+                def callback(value, total ):
+                    msg = dict(
+                        appid = task_vars['appid'],
+                        name = os.path.basename(in_path),
+                        value = value,
+                        plus = 1 if value == total else 0,
+                        allsize = task_vars['total'],
+                    )
+                    params = {'udid': task_vars['webscoketid'], 'msg': json.dumps(msg) }
+                    url = settings.WEBSOCKET_NOTIFY_URL + '?' + urllib.urlencode(params)
+                    resp = urllib2.urlopen( urllib2.Request( url ) )
+                    resp.close()
+                    print(value, total)
+                    
             self.sftp.put(to_bytes(in_path, errors='surrogate_or_strict'), to_bytes(out_path, errors='surrogate_or_strict'), callback)
         except IOError:
             raise AnsibleError("failed to transfer file to %s" % out_path)

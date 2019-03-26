@@ -1,0 +1,305 @@
+{% extends 'base.html'%}
+
+    
+{% block content %}
+
+    <!-- Main content -->
+    <section class="content">
+
+      <!-- Default box -->
+      <div class="box">
+        <div class="box-header with-border">
+          <i class="fa fa-tags"></i><h3 class="box-title">概览</h3>
+
+          <div class="box-tools pull-right">
+            <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
+              <i class="fa fa-minus"></i></button>
+            <button type="button" class="btn btn-box-tool" data-widget="remove" data-toggle="tooltip" title="Remove">
+              <i class="fa fa-times"></i></button>
+          </div>
+        </div>
+        <div class="box-body">
+            <table class="table table-responsive" >
+                <thead>
+                    <tr>
+                        <th>类型</th>
+                        <th>SN</th>
+                        <th>业务线</th>
+                        <th>制造商</th>
+                        <th>管理IP</th>
+                        <th>机房</th>
+                        <th>标签</th>
+                        <th>更新日期</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>{{ asset.get_category_display }}</td>
+                    <td>{{ asset.sn }}</td>
+                    <td></td>
+                    <td>{{ asset.oem|default:'N/A' }}</td>
+                    <td>{{asset.serverdevice.manageip}}</td>
+                    <td>{{ asset.idc|default:'N/A' }}</td>
+                    <td>
+                        {% for tag in asset.tags.all %}
+                        <label class="label label-default">{{ tag.name }}</label>
+                        {% empty %}
+                            -
+                        {% endfor %}
+                    </td>
+                    <td>{{ asset.updated_time }}</td>
+                </tr>
+                </tbody>
+            </table>
+            
+            <table class="table table-responsive">
+                <thead>
+                    <tr>
+                        <th>合同</th>
+                        <th>价格</th>
+                        <th>购买日期</th>
+                        <th>过保日期</th>
+                        <th>管理员</th>
+                        <th>批准人</th>
+                        <th>备注</th>
+                        <th>批准日期</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>{{ asset.contract.name|default:'N/A' }}</td>
+                    <td>{{ asset.contract.price|default:'N/A' }}</td>
+                    <td>{{ asset.contract.start_day|default:'N/A' }}</td>
+                    <td>{{ asset.contract.end_day|default:'N/A' }}</td>
+                    <td>{{ asset.admin|default:'N/A' }}</td>
+                    <td>{{ asset.approved_by|default:'N/A' }}</td>
+                    <td>{{ asset.memo|default:'N/A' }}</td>
+                    <td>{{ asset.updated_time }}</td>
+                </tr>
+                </tbody>
+            </table>
+            
+        </div>
+        <!-- /.box-body -->
+      </div>
+      <!-- /.box -->
+      
+      <div class="box">
+        <div class="box-header with-border">
+          <i class="fa fa-tags"></i><h3 class="box-title">服务器</h3>
+
+          <div class="box-tools pull-right">
+            <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
+              <i class="fa fa-minus"></i></button>
+            <button type="button" class="btn btn-box-tool" data-widget="remove" data-toggle="tooltip" title="Remove">
+              <i class="fa fa-times"></i></button>
+          </div>
+        </div>
+        <div class="box-body">
+            <table class="table table-responsive" >
+                <thead>
+                    <tr>
+                        <th>服务器类型</th>
+                        <th>型号</th>
+                        <th>宿主机</th>
+                        <th>Raid类型</th>
+                        <th>OS类型</th>
+                        <th>OS发行版本</th>
+                        <th>OS版本</th>
+                        <th>添加方式</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>{{ asset.serverdevice.get_category_display }}</td>
+                    <td>{{ asset.serverdevice.model|default:'N/A' }}</td>
+                    <td>{{ asset.serverdevice.hosted_on.id|default:'N/A' }}</td>
+                    <td>{{ asset.serverdevice.raid_type|default:'N/A' }}</td>
+                    <td>{{ asset.serverdevice.os_type|default:'N/A' }}</td>
+                    <td>{{ asset.serverdevice.os_distribution|default:'N/A' }}</td>
+                    <td>{{ asset.serverdevice.os_release|default:'N/A' }}</td>
+                    <td>{{ asset.serverdevice.get_created_by_display }}</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <!-- /.box-body -->
+      </div>
+      <!-- /.box -->
+      
+      <div class="box">
+        <div class="box-header with-border">
+          <i class="fa fa-tags"></i><h3 class="box-title">网卡</h3>
+
+          <div class="box-tools pull-right">
+            <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
+              <i class="fa fa-minus"></i></button>
+            <button type="button" class="btn btn-box-tool" data-widget="remove" data-toggle="tooltip" title="Remove">
+              <i class="fa fa-times"></i></button>
+          </div>
+        </div>
+        <div class="box-body">
+            <table class="table table-responsive" >
+                <thead>
+                    <tr>
+                        <th style="width:5%;">序号</th>
+                        <th>名称</th>
+                        <th>型号</th>
+                        <th>MAC</th>
+                        <th>IP</th>
+                        <th>掩码</th>
+                        <th>绑定地址</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for nic in asset.nic_set.all %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ nic.name|default:'N/A' }}</td>
+                        <td>{{ nic.model }}</td>
+                        <td>{{ nic.mac  }}</td>
+                        <td>{{ nic.ip|default:'N/A' }}</td>
+                        <td>{{ nic.netmask|default:'N/A' }}</td>
+                        <td>{{ nic.bonding|default:'N/A' }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <!-- /.box-body -->
+      </div>
+      <!-- /.box -->
+      
+      <div class="box">
+        <div class="box-header with-border">
+          <i class="fa fa-tags"></i><h3 class="box-title">CPU</h3>
+
+          <div class="box-tools pull-right">
+            <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
+              <i class="fa fa-minus"></i></button>
+            <button type="button" class="btn btn-box-tool" data-widget="remove" data-toggle="tooltip" title="Remove">
+              <i class="fa fa-times"></i></button>
+          </div>
+        </div>
+        <div class="box-body">
+            <table class="table table-responsive" >
+                <thead>
+                    <tr>
+                        <th  style="width: 45%">CPU型号</th>
+                        <th  style="width: 15%">物理CPU个数</th>
+                        <th>CPU核数</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <td>{{ asset.cpu.cpu_model|default:'N/A' }}</td>
+                    <td>{{ asset.cpu.cpu_count|default:'1' }}</td>
+                    <td>{{ asset.cpu.cpu_core_count|default:'1' }}</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+        <!-- /.box-body -->
+      </div>
+      <!-- /.box -->
+      
+      <div class="box">
+        <div class="box-header with-border">
+          <i class="fa fa-tags"></i><h3 class="box-title">内存</h3>
+
+          <div class="box-tools pull-right">
+            <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
+              <i class="fa fa-minus"></i></button>
+            <button type="button" class="btn btn-box-tool" data-widget="remove" data-toggle="tooltip" title="Remove">
+              <i class="fa fa-times"></i></button>
+          </div>
+        </div>
+        <div class="box-body">
+            <table class="table table-responsive" >
+                <thead>
+                    <tr>
+                        <th style="width:5%;">序号</th>
+                        <th>型号</th>
+                        <th>容量</th>
+                        <th>插槽</th>
+                        <th>制造商</th>
+                        <th>SN</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for ram in asset.ram_set.all %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ ram.model|default:'N/A' }}</td>
+                        <td>{{ ram.capacity|default:'N/A' }}</td>
+                        <td>{{ ram.slot }}</td>
+                        <td>{{ ram.manufacturer|default:'N/A' }}</td>
+                        <td>{{ ram.sn|default:'N/A' }}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td></td><td></td><td></td><td></td><td></td><td></td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <!-- /.box-body -->
+      </div>
+      <!-- /.box -->
+      
+      <div class="box">
+        <div class="box-header with-border">
+          <i class="fa fa-tags"></i><h3 class="box-title">硬盘</h3>
+
+          <div class="box-tools pull-right">
+            <button type="button" class="btn btn-box-tool" data-widget="collapse" data-toggle="tooltip" title="Collapse">
+              <i class="fa fa-minus"></i></button>
+            <button type="button" class="btn btn-box-tool" data-widget="remove" data-toggle="tooltip" title="Remove">
+              <i class="fa fa-times"></i></button>
+          </div>
+        </div>
+        <div class="box-body">
+            <table class="table table-responsive">
+                <thead>
+                    <tr>
+                        <th style="width:5%;">序号</th>
+                        <th>型号</th>
+                        <th>容量</th>
+                        <th>插槽</th>
+                        <th>接口类型</th>
+                        <th>制造商</th>
+                        <th>SN</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for disk in asset.disk_set.all %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ disk.model|default:'N/A' }}</td>
+                        <td>{{ disk.capacity|default:'N/A' }}</td>
+                        <td>{{ disk.slot|default:'N/A'  }}</td>
+                        <td>{{ disk.get_interface_type_display }}</td>
+                        <td>{{ disk.manufacturer|default:'N/A' }}</td>
+                        <td>{{ disk.sn}}</td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <!-- /.box-body -->
+      </div>
+      <!-- /.box -->
+
+    </section>
+    <!-- /.content -->
+
+{% endblock %}

@@ -65,7 +65,7 @@
                                 <select id="publish_user" name="publish_user" class="form-control">
                                     <option value="">请选择用户</option>
                                     {% for publish_user in publish_users %}
-                                    <option value="{{publish_user.ssh_username}}">{{publish_user.ssh_username}}</option>
+                                    <option value="{{publish_user.user_id}}">{{publish_user.user_id}}</option>
                                     {% endfor %}
                                 </select>
                             </div>
