@@ -61,7 +61,7 @@ def do_release_task(data):
                                   status = operation_status,
                                   details = json.dumps(playbook_result),
                                   created_by = data['username'],)
-        logging.info("do_release_task[result]: %s", result)
+        logging.info("do_release_task result: %s", result)
     except Exception, e:
         logging.error('error in do_release_task: %s', traceback.format_exc() )
         
@@ -80,7 +80,7 @@ def do_command_task(data):
             with open(record_path, 'a+') as f:
                 f.write('finish')
                 f.flush()
-        logging.info("do_command_task[result]: %s", result)
+        logging.info("do_command_task result: %s", result)
     except:
         logging.error('error in do_command_task: %s', traceback.format_exc() )
     

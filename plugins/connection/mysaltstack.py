@@ -52,8 +52,6 @@ class Connection(ConnectionBase):
         
         self.token = None
         self.token = self.mk_token(self._play_context.remote_user, self._play_context.password)
-        #if 'root' != os.environ.get('USER'):
-        #    self.token = self.mk_token('service', 'service!@#')
 
     def _connect(self):
         if not HAVE_SALTSTACK:
@@ -126,13 +124,13 @@ class Connection(ConnectionBase):
                 allsize=task_vars['total'] )
             svn_out = os.path.dirname(os.path.dirname(settings.SVN_OUTPATH))
             in_path = 'salt://' + in_path[len(svn_out)+1:]
-            print('in_path: ', in_path)
             callback = {'url': settings.WEBSOCKET_NOTIFY_URL, 'vars': extra}
-            self.client.cmd(self.host, 'mycp.get_file', [in_path, out_path, callback], token=self.token )
+            res = self.client.cmd(self.host, 'mycp.get_file', [in_path, out_path, callback], token=self.token )
         else:
             content = open(in_path).read()
-            self.client.cmd(self.host, 'file.write', [out_path, content],  token=self.token )
+            res = self.client.cmd(self.host, 'file.write', [out_path, content],  token=self.token )
             self.client.cmd(self.host, 'file.truncate', [out_path, os.path.getsize(in_path)], token=self.token )
+        print("PUT %s RESULT %s" % (in_path, res ) )
 
     # TODO test it
     def fetch_file(self, in_path, out_path):

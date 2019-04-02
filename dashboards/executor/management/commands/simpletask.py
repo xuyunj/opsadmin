@@ -57,13 +57,20 @@ class Command(BaseCommand):
         })
         try:
             while not _END_EVENT_.isSet():
-                tasks = Task.objects.all()
+                tasks = Task.objects.order_by('run_level')[0:10]
                 if not tasks:
                     _END_EVENT_.wait(1.0)
                     continue
-                task = tasks[0]
-                event_ins.dealt(task.route_key, task.json_data )
-                Task.objects.get(id=task.id).delete()
+                for task in tasks:
+                    data = json.loads( task.json_data )
+                    if data.has_key('iscron') and int(data['iscron']) == 1:
+                        current_time = datetime.now()
+                        runtime = datetime.strptime(data['runtime'], '%Y-%m-%d %H:%M')
+                        if current_time < runtime :
+                            _END_EVENT_.wait(1.0)
+                            continue
+                    event_ins.dealt(task.route_key, task.json_data )
+                    task.delete()
         except Exception, e:
             self.stdout.write('run error. Detail error info as follows:  %s' % e)
         
